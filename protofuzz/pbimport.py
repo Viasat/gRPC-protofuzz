@@ -42,6 +42,9 @@ def find_protoc(path=os.environ["PATH"]):
 
     raise ProtocNotFound("Protobuf compiler not found")
 
+def find_python():
+    return sys.executable
+
 
 def from_string(proto_str):
     """Produce a Protobuf module from a string description.
@@ -77,9 +80,12 @@ def _compile_proto(full_path, dest):
     """Compile protobuf files."""
     proto_path = os.path.dirname(full_path)
     protoc_args = [
-        find_protoc(),
-        "--python_out={}".format(dest),
-        "--proto_path={}".format(proto_path),
+        find_python(),
+        '-m',
+        'grpc_tools.protoc',
+        '--python_out={}'.format(dest),
+        '--grpc_python_out={}'.format(dest),
+        '-I{}'.format(proto_path),
         full_path,
     ]
     proc = subprocess.Popen(protoc_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -121,7 +127,7 @@ def from_file(proto_file):
     name = re.search(r"^(.*)\.proto$", filename).group(1)
     target = os.path.join(dest, name + "_pb2.py")
 
-    return _load_module(target)
+    return _load_module(target), target
 
 
 def types_from_module(pb_module):

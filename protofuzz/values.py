@@ -37,7 +37,9 @@ def _fuzzdb_integers(limit=0):
 
 def _fuzzdb_get_strings(max_len=0):
     """Return strings from fuzzdb."""
-    ignored = ["integer-overflow"]
+    ignored = ["integer-overflow", "README.md"]
+
+    yield ("A" * 65537)
 
     for subdir in pkg_resources.resource_listdir("protofuzz", BASE_PATH):
         if subdir in ignored:

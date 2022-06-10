@@ -29,6 +29,7 @@ Usage:
 from google.protobuf import descriptor as D
 from google.protobuf import message
 from google.protobuf.internal import containers
+import google.protobuf.pyext as pyext
 
 from protofuzz import pbimport, gen, values
 
@@ -47,6 +48,9 @@ def _int_generator(descriptor, bitwidth, unsigned):
 
 def _string_generator(descriptor, max_length=0, limit=0):
     vals = list(values.get_strings(max_length, limit))
+    # if a repeated type
+    if descriptor.label == 3:
+        vals.insert(0,["A"]*65537)
     return gen.IterValueGenerator(descriptor.name, vals)
 
 
@@ -137,8 +141,12 @@ def _assign_to_field(obj, name, val):
     """Return map of arbitrary value to a protobuf field."""
     target = getattr(obj, name)
 
-    if isinstance(target, containers.RepeatedScalarFieldContainer):
-        target.append(val)
+    if isinstance(target, pyext._message.RepeatedScalarContainer):
+        if type(val) == list:
+            for i in val:
+                target.append(i)
+        else:
+            target.append(val)
     elif isinstance(target, containers.RepeatedCompositeFieldContainer):
         target = target.add()
         target.CopyFrom(val)
@@ -263,7 +271,7 @@ def from_file(protobuf_file):
 
     """
     module = pbimport.from_file(protobuf_file)
-    return _module_to_generators(module)
+    return _module_to_generators(module), pb2_path
 
 
 def from_description_string(protobuf_desc):
