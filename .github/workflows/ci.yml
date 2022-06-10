@@ -19,13 +19,13 @@ jobs:
       - name: lint
         run: |
           pip3 install black
+          pip3 install grpcio-tools
           black --check protofuzz
 
   test:
     strategy:
       matrix:
         python:
-          - "3.7"
           - "3.8"
           - "3.9"
     runs-on: ubuntu-latest
