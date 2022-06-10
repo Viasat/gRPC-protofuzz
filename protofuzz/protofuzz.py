@@ -251,7 +251,7 @@ def _module_to_generators(pb_module):
     return {k: ProtobufGenerator(v) for k, v in message_types.items()}
 
 
-def from_file(protobuf_file):
+def from_file(include_path, protobuf_file):
     """Return dict of generators from a path to a .proto file or pre-generated _pb2.py file.
     _pb2.py file should be the output of the Protobuf compiler; users should not attempt to import arbitrary Python files.
 
@@ -270,7 +270,7 @@ def from_file(protobuf_file):
         Any Import Python module errors: e.g. AttributeError, IndentationError, etc if the _pb2.py file is not a valid generated file
 
     """
-    module = pbimport.from_file(protobuf_file)
+    module, pb2_path = pbimport.from_file(include_path, protobuf_file)
     return _module_to_generators(module), pb2_path
 
 

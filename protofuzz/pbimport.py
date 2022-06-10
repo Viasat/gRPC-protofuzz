@@ -57,7 +57,7 @@ def from_string(proto_str):
     with open(proto_file, "w+") as proto_f:
         proto_f.write(proto_str)
 
-    return from_file(proto_file)
+    return from_file("/tmp", proto_file)
 
 
 def _load_module(path):
@@ -76,7 +76,7 @@ def _load_module(path):
     return module
 
 
-def _compile_proto(full_path, dest):
+def _compile_proto(include_path, full_path, dest):
     """Compile protobuf files."""
     proto_path = os.path.dirname(full_path)
     protoc_args = [
@@ -85,7 +85,7 @@ def _compile_proto(full_path, dest):
         'grpc_tools.protoc',
         '--python_out={}'.format(dest),
         '--grpc_python_out={}'.format(dest),
-        '-I{}'.format(proto_path),
+        '-I{}'.format(include_path),
         full_path,
     ]
     proc = subprocess.Popen(protoc_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -105,7 +105,7 @@ def _compile_proto(full_path, dest):
     return True
 
 
-def from_file(proto_file):
+def from_file(include_path, proto_file):
     """Takes either a |protoc_file| or a generated |module_file|
     If given a `_pb2.py` file, this will try to just import the module. This should be the output of the Protobuf compiler; users should not attempt to import arbitrary Python files.
     If given a `.proto` file, this will compile it via the Protobuf compiler, and import the module.
@@ -121,11 +121,16 @@ def from_file(proto_file):
 
     dest = tempfile.mkdtemp()
     full_path = os.path.abspath(proto_file)
-    _compile_proto(full_path, dest)
+    include_path = os.path.abspath(include_path)
+    _compile_proto(include_path, full_path, dest)
+
+    common_path = os.path.commonprefix([full_path, include_path])
+    relative_path = os.path.relpath(full_path, common_path)
 
     filename = os.path.split(full_path)[-1]
     name = re.search(r"^(.*)\.proto$", filename).group(1)
-    target = os.path.join(dest, name + "_pb2.py")
+    target_path = os.path.dirname(dest + "/" + relative_path)
+    target = os.path.join(target_path, name + "_pb2.py")
 
     return _load_module(target), target
 

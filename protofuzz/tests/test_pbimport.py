@@ -57,7 +57,7 @@ class TestPbimport(unittest.TestCase):
         pbimport._compile_proto(full_path, dest)
         target = os.path.join(dest, "test_pb2.py")
 
-        module, pb2_path = pbimport.from_file(target)
+        module, pb2_path = pbimport.from_file(self.tempdir, target)
         self.assertTrue(hasattr(module, name))
 
     def test_failing_import(self):
@@ -70,7 +70,7 @@ class TestPbimport(unittest.TestCase):
         with open(filename, "w") as f:
             f.write(contents)
 
-        module,pb2_path = pbimport.from_file(filename)
+        module,pb2_path = pbimport.from_file(self.tempdir, filename)
         with self.assertRaises(AttributeError):
             pbimport.types_from_module(module)
 
@@ -81,7 +81,7 @@ class TestPbimport(unittest.TestCase):
         filename = os.path.join(self.tempdir, "test_pb2.py")
 
         with self.assertRaises(FileNotFoundError):
-            module, pb2_path = pbimport.from_file(filename)
+            module, pb2_path = pbimport.from_file(self.tempdir, filename)
 
     def test_generate_and_import(self):
         """
@@ -93,7 +93,7 @@ class TestPbimport(unittest.TestCase):
         with open(self.valid_filename, "w") as f:
             f.write(contents)
 
-        module, pb2_path = pbimport.from_file(self.valid_filename)
+        module, pb2_path = pbimport.from_file(self.tempdir, self.valid_filename)
         self.assertTrue(hasattr(module, name))
 
     def test_failing_generate_and_import(self):
@@ -106,4 +106,4 @@ class TestPbimport(unittest.TestCase):
             f.write(contents)
 
         with self.assertRaises(pbimport.BadProtobuf):
-            module, pb2_path = pbimport.from_file(self.valid_filename)
+            module, pb2_path = pbimport.from_file(self.tempdir, self.valid_filename)
