@@ -78,7 +78,6 @@ def _load_module(path):
 
 def _compile_proto(include_path, full_path, dest):
     """Compile protobuf files."""
-    proto_path = os.path.dirname(full_path)
     protoc_args = [
         find_python(),
         '-m',
